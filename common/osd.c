@@ -165,7 +165,10 @@ void osd_set_coord(int nr, struct osd_xy *coord)
 	osd_set_start_xy(nr, coord->leftx, coord->lefty);
 	osd_set_end_xy(nr, coord->rightx, coord->righty);	
 }
-
+/*
+*(1)OSD窗口0，虚拟屏宽度设置寄存器
+*(2)虚拟屏的宽度，单位是像素
+*/
 void osd_set_vm_width(int nr, int val)
 {
 	uint32_t tmp, offset = OVCW0VSSR;
