@@ -551,18 +551,32 @@ void osd_close(int nr)
 void osd_init(struct osd_cfg *cfg)
 {
 	uint32_t val;
-
+        /*
+        *(1)参数配置了隔行逐行扫描模式
+        *(2)参数配置了itu接口模式（输出）
+        *(3)参数配置了全局变量使能
+        *(4)参数配置了DMA错误超时时间
+        */
 	val = (cfg->ituInterface << OVCDCR_Interlace) | 
 		  (cfg->interlaced << OVCDCR_IfType) |
 		  (1 << OVCDCR_LOAD_EN) | (0xf << OVCDCR_WaitTime);
 	if (cfg->mode < BOTH_CHANNEL)
 		val |= ((cfg->mode + 1) << OVCDCR_SP_LOAD_EN) << 0;
 	writel(val, reg_base + OVCDCR);
-	/* In normal mode, cannot update palette memory */
+	/*
+	*(1)写0.往调色板控制寄存器的bit15写0，表示让调色板处于normal模式。
+	*(2)In normal mode, cannot update palette memory
+	*/
 	osd_palette_ctrl(DISABLE);
-	/* set background color blue */
+	/*
+	*(1)set background color blue
+	*(2)设置osd背景颜色为0，那就是白色。
+	*/
 	osd_set_bg_color(cfg->gbcolor);
-	/* set scale xy */
+	/* 
+	*(1)set scale xy 
+	*(2)通过配置osd的窗口大小配置寄存器，来配置osd图层的宽度和高度。当且仅当有scaler模块时有效。
+	*/
 	osd_set_scale_xy(cfg->screenWidth, cfg->screenHeight);
 }
 
