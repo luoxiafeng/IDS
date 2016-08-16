@@ -127,7 +127,10 @@ void osd_set_scale_xy(int x, int y)
 		  ((y - 1) << OVCWPR_OSDWinY);
 	writel(val, reg_base + OVCWPR);
 }
-
+/*
+*(1)设置OSD图像的左上角x坐标和y坐标
+*(2)配置的是OSD的窗口0位置寄存器A
+*/
 static void osd_set_start_xy(int nr, int x, int y)
 {
 	uint32_t val, offset = OVCW0PCAR;
@@ -139,7 +142,10 @@ static void osd_set_start_xy(int nr, int x, int y)
 		  (y << OVCWxPCAR_LeftTopY);
 	writel(val, reg_base + offset);
 }
-
+/*
+*(1)配置的是窗口0位置寄存器B
+*(2)OSD图像的右下角坐标x和y的值
+*/
 void osd_set_end_xy(int nr, int x, int y)
 {
 	uint32_t val, offset = OVCW0PCBR;
@@ -150,7 +156,10 @@ void osd_set_end_xy(int nr, int x, int y)
 		  ((y - 1) << OVCWxPCBR_RightBotY);
 	writel(val, reg_base + offset);
 }
-
+/*
+*(1)coord是windows api中的结构体，表示一个字符在控制台上的坐标。
+*(2)通过设置OSD图像win0的左上角坐标（x，y）和右下角坐标(x,y)，来确定osd的win0的位置
+*/
 void osd_set_coord(int nr, struct osd_xy *coord)
 {
 	osd_set_start_xy(nr, coord->leftx, coord->lefty);
@@ -249,6 +258,9 @@ void osd_set_yuv_dma(int nr, int num, struct dma_buffer *dma)
 	}
 }
 
+/*
+*(1)直接往OSD窗口0控制寄存器中的bpp控制位写
+*/
 void osd_set_bppmode(int nr, int mode)
 {
 	uint32_t val, offset = OVCW0CR;
