@@ -70,6 +70,9 @@ int ids_draw_image(struct ids_mannual_image *imagecfg, int flags)
 	return 0;
 }
 
+/*
+*(1)OSD DMA的初始化，就是分配了内存而已。
+*/
 void osd_dma_init(struct osd_dma *dma, int flags, int dma_num)
 {
 	int width, height;
@@ -100,11 +103,13 @@ void osd_common_init(int nr, enum osd_mode mode, struct osd_dma *dma)
 {
 	struct osd_win_cfg win;
 	struct osd_cfg cfg;
-	
+	/*
+	*(1)目前我们osd只支持两路通道的叠加。
+	*/
 	memset(&win,0,sizeof(struct osd_win_cfg));
 	/* set osd global reg */
 	cfg.mode = BOTH_CHANNEL;
-	cfg.interlaced = PROGRESSIVE;
+	cfg.interlaced = PROGRESSIVE;//逐行
 	cfg.ituInterface = IF_RGB;
 	if (mode == LCD_MODE)
 		lcd_get_screen_size(&cfg.screenWidth, &cfg.screenHeight);
@@ -119,6 +124,12 @@ void osd_common_init(int nr, enum osd_mode mode, struct osd_dma *dma)
 	}
 	//cfg.gbcolor = 0xff << 8;
 	cfg.gbcolor = 0;
+	/*
+	*(1)配置osd控制寄存器，设置ITU接口模式、逐行扫描、全局变量
+	*(2)将调色板配置为normal模式
+	*(3)设置OSD的背景色
+	*(4)设置ids的osd的宽度和高度
+	*/
 	osd_init(&cfg);
 	/* init osd win */
 	win.nr = nr;
