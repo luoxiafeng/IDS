@@ -75,6 +75,11 @@ int osd_reg_check(void)
 	return 0;
 }
 
+/*
+*(1)这个函数跟dma没有一毛钱关系。
+*(2)就是设置了OSD 控制器内部的buffer的使用。
+*(3)总共有4个buffer，至少使用两个buffer。当有多个buffer的时候，可以通过配置寄存器决定使用哪一个buffer。
+*/
 void osd_set_dma_mode(int nr, struct osd_buf_mode *mode)
 {
 	uint32_t val, offset = OVCW0CR;
@@ -84,9 +89,9 @@ void osd_set_dma_mode(int nr, struct osd_buf_mode *mode)
 
 	val = readl(reg_base + offset);
 	val &= ~(0x1f << OVCWxCR_BUFNUM);
-	val |= (((mode->bufsel & 0x3) << OVCWxCR_BUFSEL) |
-		   ((mode->bufauto & 0x1) << OVCWxCR_BUFAUTOEN) |
-		   ((mode->bufnum & 0x3) << OVCWxCR_BUFNUM));
+	val |= (((mode->bufsel & 0x3) << OVCWxCR_BUFSEL) | //buffer选择
+		   ((mode->bufauto & 0x1) << OVCWxCR_BUFAUTOEN) | //buffer控制标志位
+		   ((mode->bufnum & 0x3) << OVCWxCR_BUFNUM));   //选择开启的buffer数量
 	writel(val, reg_base + offset);
 }
 
