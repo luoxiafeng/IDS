@@ -34,15 +34,20 @@ static void ids_convert_RGBTOYUV(struct ids_mannual_image *imagecfg)
 	ids_err("ids_convert_RGBTOYUV OK\n");
 }
 
+
 int ids_draw_image(struct ids_mannual_image *imagecfg, int flags)
 {
 	if (!imagecfg->set) {
+		//设置图像的格式：RGB_888
+		//设置图像的类型：HOR_BAR
+		//我们当前使用的是LCD模式，则从LCD的控制器寄存器中获取图像的宽度和高度信息。
 		imagecfg->format = OSD_IMAGE_RGB_BPP24_888;
 		imagecfg->type = OSD_TEST_IMAGE_TYPE_HOR_BAR;
 		if (flags == CVBS_MODE)
 			tvif_get_display(&imagecfg->width, &imagecfg->height);
 		else if (flags == LCD_MODE)
 			lcd_get_screen_size(&imagecfg->width, &imagecfg->height);
+		//当前这个参数，我也不知道啥意思。
 		imagecfg->mVBar = 8;
 	}
 	/* if output format = OSD_IMAGE_YUV_420SP, we need first draw a RGB
@@ -51,13 +56,14 @@ int ids_draw_image(struct ids_mannual_image *imagecfg, int flags)
 		imagecfg->YUV = (uint8_t *)imagecfg->mem;
 		imagecfg->mem = NULL;
 	}
-
+	//已经将图像配置的内存，指向了DMA 的buffer，所以这里没有必要再重新分配了。
 	if (!imagecfg->mem)
 		imagecfg->mem = (uint32_t *)malloc(imagecfg->width * imagecfg->height * 4);
 	if (!imagecfg->mem) {
 		ids_err("malloc mem err\n");
 		return -1;
 	}
+	//填充frame buffer?
 	ids_fill_framebuffer(imagecfg);
 	if (imagecfg->format == OSD_IMAGE_YUV_420SP)
 		ids_convert_RGBTOYUV(imagecfg);
