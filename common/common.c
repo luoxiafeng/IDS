@@ -335,6 +335,9 @@ static const char *imagetype[] = {
 };
 #endif
 
+/*
+*(1)这个函数其实很简单。就是打开一个文件。从文件中读取数据，填充到cfg指向的内存中。
+*/
 int ids_fill_framebuffer(struct ids_mannual_image *cfg)
 {
 #if defined(CONFIG_COMPILE_FPGA) || defined(CONFIG_COMPILE_RTL)
@@ -348,17 +351,24 @@ int ids_fill_framebuffer(struct ids_mannual_image *cfg)
 	}
 #if defined(CONFIG_COMPILE_FPGA) || defined(CONFIG_COMPILE_RTL)
    len = cfg->width * cfg->height * 4;
+   //如果当图像配置类型是水平的，则val取【垂直】的值
    if (cfg->type == OSD_TEST_IMAGE_TYPE_HOR_BAR)
        val = cfg->mVBar;
+   //如果当前图像配置类型是垂直的，则val取【水平】的值
    else if (cfg->type == OSD_TEST_IMAGE_TYPE_VER_BAR)
        val = cfg->mHBar;
+   //否则，val取color的值
    else
        val = cfg->color;
+   //name是当前函数内部定义的一个字符数组，现在要生成一个字符串“ids/osd/hor_bar_8”
    sprintf(name, "ids/osd/%s_%d", imagetype[cfg->type], val);
+   //如果配置了osd的叠加参数，则字符串“ids/osd/hor_bar_8_”
    if (cfg->alpha)
 	   sprintf(name, "ids/osd/%s_%d_%d", imagetype[cfg->type], val, cfg->alpha); 
+   //如果格式不等于RGB888，则字符串“ids/osd/hor_bar_8_”
    if (cfg->format != OSD_IMAGE_RGB_BPP24_888)
 	   sprintf(name, "ids/osd/%s_%d_%d", imagetype[cfg->type], val, cfg->format);
+   //如果配置的时候已经指定了name，则直接打开。否则打开刚才生成的文件。
    if (cfg->name[0] != '\0') {
 	   cfg->fd = open(cfg->name, O_RDONLY);
 	   printf("cfg->name is %s\n", cfg->name);
@@ -370,10 +380,12 @@ int ids_fill_framebuffer(struct ids_mannual_image *cfg)
 	   ids_err("open file err, %s\n", name);
 	   return -1;
    }
+   //从打开的文件中读取数据，填充到图像配置的buffer中。
    if (read(cfg->fd, cfg->mem, len) < 0) {
 	   ids_err("read file err: %s\n", name);
 	   return -1;
    }
+   //关闭文件。
    close(cfg->fd);
    return 0;
 #endif   
