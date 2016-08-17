@@ -199,7 +199,11 @@ void osd_set_yuvtorgb(struct osd_yuv *yuv)
 			writel(yuv->out_coef[i] & 0x7ff, OVCOEF11 + 4 * i + reg_base);
 	}
 }
-
+/*
+*(1)这个使能之后，被覆盖的区域的图像数据不再被读取。
+*(2)并且遮盖的颜色将替换原图。这里给了一个24bit的颜色，可以用这个颜色来替换【区域】中的原图。
+*(3)既然是24bit的，就是一个真彩色的颜色值。
+*/
 void osd_colormap_ctrl(int nr, int enable, int color)
 {
 	uint32_t val, offset = OVCW0CMR;
@@ -211,6 +215,7 @@ void osd_colormap_ctrl(int nr, int enable, int color)
 		  (color << OVCWCMRx_COLOR);
 	writel(val, reg_base + offset);
 }
+
 void osd_set_changerb(int nr, int enable)
 {       
         uint32_t offset = OVCW0CR;
