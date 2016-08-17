@@ -232,6 +232,11 @@ void osd_set_changerb(int nr, int enable)
         writel(val, reg_base + offset);
 }
 
+/*
+*(1)牛头不对马嘴。这个函数的意思是设置framebuffer的偏移。
+*(2)我们已经知道，ids控制器中最多有4个buffer，每个buffer中的有效数据可以通过寄存器来配置。
+*   说白了，就是可以任意指定buffer的有效数据。
+*/
 void osd_set_dma_channel(int nr, int num, struct dma_buffer *dma)
 {
 	uint32_t offset1 = OVCW0B0SAR;
@@ -247,7 +252,11 @@ void osd_set_dma_channel(int nr, int num, struct dma_buffer *dma)
 	
 	if (nr)
 		offset1 = OVCW1B0SAR;
-
+        /*
+        *(1)我们可以看出来，dma[i].vir_addr指向的是malloc动态分配的内存。
+        *(2)我们把这个虚拟地址，写到控制器的buffer寄存器，也就是说，控制器内部是没有buffer的，只是有一个4字节的寄存器
+        *   需要我们分配内存，然后把内存的首地址告诉这个寄存器。这个寄存器就知道buffer在哪里了。
+        */
 	for (i = 0; i < num;i++)
 		writel((uint32_t)(dma[i].vir_addr), reg_base + offset1 + i * 4);
 }
