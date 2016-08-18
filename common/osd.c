@@ -94,7 +94,10 @@ void osd_set_dma_mode(int nr, struct osd_buf_mode *mode)
 		   ((mode->bufnum & 0x3) << OVCWxCR_BUFNUM));   //选择开启的buffer数量
 	writel(val, reg_base + offset);
 }
-
+/*
+*(1)osd其实就是由两个窗口组成的。
+*(2)win0和win2.osd的使能说白了就是对应的窗口的使能。
+*/
 static void osd_enable_ctrl(int nr, int enable)
 {
 	uint32_t val, offset = OVCW0CR;
@@ -103,9 +106,9 @@ static void osd_enable_ctrl(int nr, int enable)
 		offset = OVCW1CR;
 	val = readl(reg_base + offset);
 	if (enable)
-		val |= (0x1 << OVCWxCR_ENWIN);
+		val |= (0x1 << OVCWxCR_ENWIN); //win使能
 	else
-		val &= ~(0x1 << OVCWxCR_ENWIN);
+		val &= ~(0x1 << OVCWxCR_ENWIN);//win不使能
 	writel(val, reg_base + offset);
 }
 
@@ -289,7 +292,10 @@ void osd_set_bppmode(int nr, int mode)
 	val |= (mode << OVCWxCR_BPPMODE);
 	writel(val, reg_base + offset);
 }
-
+/*
+*(1)只有win1才需要设置colorkey的值。
+*(2)如果是win0，则不需要设置colorkey。
+*/
 void osd_set_colorkey(int nr, struct osd_colorkey *colorkey)
 {
 	uint32_t val;
@@ -298,9 +304,9 @@ void osd_set_colorkey(int nr, struct osd_colorkey *colorkey)
 		return;
 
 	val = readl(reg_base + OVCW1CKCR);
-	val = ((colorkey->enable << OVCWxCKCR_KEYEN) |
-		   (colorkey->enableBlend << OVCWxCKCR_KEYBLEN) |
-		   (colorkey->dircon << OVCWxCKCR_DIRCON) |
+	val = ((colorkey->enable << OVCWxCKCR_KEYEN) |  //color key 使能控制
+		   (colorkey->enableBlend << OVCWxCKCR_KEYBLEN) | //color key 混合控制：0-关闭、1-使能。在非key区域利用alpha0混合；在key区域，利用alpha1混合
+		   (colorkey->dircon << OVCWxCKCR_DIRCON) | //方向控制。与color-key一样的就不显示。选择方向分为：前景色、背景色
 		   (colorkey->compkey << OVCWxCKCR_COMPKEY));
 	writel(val, reg_base + OVCW1CKCR);
 	
@@ -319,13 +325,18 @@ void osd_set_alpha(int nr, struct osd_alpha *alpha)
 	/*
 	*(1)窗口1控制寄存器
 	*(2)设置alpha的值；选择混合种类：平面混合、像素混合
+	*(3)按照杨磊的意思，所谓的像素混合，就是RGB像素值中有alpha分量的值；所谓的平面混合，就是像素数据没有alpha的值，需要
+	*   人为给定一个alpha的值。
+	*(4)如果需要人为设定alpha的值，则混合种类就应该选择平面混合了。
 	*/
 	val = readl(reg_base + OVCW1CR);
 	val &= ~(0x3 << OVCWxCR_BLD_PIX);
 	val |= ((alpha->path << OVCWxCR_ALPHA_SEL) |
 			(alpha->blendmode << OVCWxCR_BLD_PIX));
 	writel(val, reg_base + OVCW1CR);
-	
+	/*
+	*(1)这是一个32bit的寄存器，有效位数为24bit。每个占据4bit，总共6个数据。
+	*/
 	val = ((alpha->alpha0_r << OVCWxPCCR_ALPHA0_R) |
 		   (alpha->alpha0_g << OVCWxPCCR_ALPHA0_G) |
 		   (alpha->alpha0_b << OVCWxPCCR_ALPHA0_B) |
@@ -360,14 +371,16 @@ void osd_set_pixel_swap(int nr, struct osd_swap *swap)
 	}
 	writel(val, reg_base + offset);
 }
-
+/*
+*(1)设置scaler的模式：在osd之前、在osd之后。
+*/
 void osd_set_scaler_mode(enum scaler_mode mode)
 {
 	uint32_t val;
 
 	val = readl(reg_base + OVCDCR);
-	val &= ~(0x1 << OVCDCR_ScalerMode);
-	val |= (mode << OVCDCR_ScalerMode);
+	val &= ~(0x1 << OVCDCR_ScalerMode);//先把bit为对应的寄存器设置为0
+	val |= (mode << OVCDCR_ScalerMode);//把要设置的mode写进寄存器
 	writel(val, reg_base + OVCDCR);
 }
 
