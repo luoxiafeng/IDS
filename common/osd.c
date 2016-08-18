@@ -329,6 +329,10 @@ void osd_set_alpha(int nr, struct osd_alpha *alpha)
 	writel(val, reg_base + OVCW1PCCR);
 }
 
+/*
+*(1)设置一个byte交换寄存器。1-表示允许交换；0表示不允许交换。
+*(2)现在设置的是0.
+*/
 void osd_set_pixel_swap(int nr, struct osd_swap *swap)
 {
 	uint32_t val, offset = OVCW0CR;
@@ -476,16 +480,21 @@ void osd_set_width_scaler(struct osd_scaler *scaler)
 
 void osd_set_pallete(int nr, struct osd_pallete *pallete)
 {
-	uint32_t val = 0, offset = OVCW0PAL0;
+	uint32_t val = 0, offset = OVCW0PAL0;//osd win0的调色板RAM。就是256个4字节的寄存器。
 	int i;
 
 	if (nr)
-		offset = OVCW1PAL0;
+		offset = OVCW1PAL0;//osd win1的调色板RAM。就是256个4字节的寄存器。
 
 	if (!pallete || !pallete->table)
 		return;
 
 	if (pallete->tableLength) {
+		/*
+		*(1)这是ids的控制寄存器。
+		*(2)先把这个寄存器的低三个bit设置为0.这三个bit表示调色板的数据格式。
+		*(3)然后把我们希望的数据格式，设置到寄存器中。16BIT,18BIT,19BIT,24BIT,25BIT
+		*/
 		val = readl(reg_base + OVCPCR);
 		if (nr) {
 			val &= ~(0x7 << OVCPCR_W1PALFM);
@@ -494,11 +503,22 @@ void osd_set_pallete(int nr, struct osd_pallete *pallete)
 			val &= ~(0x7 << OVCPCR_W0PALFM);
 			val |= (pallete->format << OVCPCR_W0PALFM);
 		}
+		/*
+		*(1)设置调色板的开关。这个寄存器就相当于一个开关。打开，则调色板memory可以修改。
+		*(2)
+		*/
 		val |= (0x1 << OVCPCR_UPDATE_PAL);
 		writel(val, reg_base + OVCPCR);
-
+		/*
+		*(1)之前我们已经介绍过，调色板有256个颜色，每个颜色就是一个数值（0-255）.RGB三个字节，对于4字节的寄存器
+		*   绰绰有余
+		*/
 		for (i = 0; i < pallete->tableLength; i++)
 			writel(pallete->table[i], reg_base + offset + 4 * i);
+		/*
+		*(1)设置调色板的开关。关闭。
+		*(2)调色板中的颜色修改好了之后，就关闭。关闭后，调色板的颜色就锁定了，不再改变了。
+		*/
 		val = readl(reg_base + OVCPCR);
 		val &= ~(0x1 << OVCPCR_UPDATE_PAL);
 		writel(val, reg_base + OVCPCR);
