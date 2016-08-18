@@ -306,14 +306,20 @@ void osd_set_colorkey(int nr, struct osd_colorkey *colorkey)
 	
 	writel(colorkey->colval, reg_base + OVCW1CKR);
 }
-
+/*
+*(1)只有win1才需要设置alpha的值。
+*(2)如果是win0，则不需要设置alpha。
+*/
 void osd_set_alpha(int nr, struct osd_alpha *alpha)
 {
 	uint32_t val;
 	
 	if (nr < 1)
 		return;
-	
+	/*
+	*(1)窗口1控制寄存器
+	*(2)设置alpha的值；选择混合种类：平面混合、像素混合
+	*/
 	val = readl(reg_base + OVCW1CR);
 	val &= ~(0x3 << OVCWxCR_BLD_PIX);
 	val |= ((alpha->path << OVCWxCR_ALPHA_SEL) |
