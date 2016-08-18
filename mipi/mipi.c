@@ -211,10 +211,10 @@ int mipi_open(char *name)
 	uint8_t no_of_lanes;
 	uint32_t status;
 	uint32_t ref_clock=0;
-
+	//动态分配一个结构体，然后下面的任务就是对这个结构体进行填充
 	if (!instance) 
 		instance = malloc(sizeof(dsih_ctrl_t));
-
+	//获取mipi的clock
 	ref_clock = module_get_clock("mipi-ref");	
 
 	/* init dsi controller */
@@ -222,7 +222,7 @@ int mipi_open(char *name)
 	instance->max_lanes = 4;
 	instance->max_hs_to_lp_cycles = 100;
 	instance->max_lp_to_hs_cycles = 40;
-	instance->max_bta_cycles = 4095;
+	instance->max_bta_cycles = 4095;//bus turn around time
 	instance->color_mode_polarity = 1;
 	instance->shut_down_polarity = 1;
 	instance->status = NOT_INITIALIZED;
